@@ -35,16 +35,16 @@ public class FloodFilter implements ChatFilter {
     }
 
     @Override
-    public boolean checkMessage(Player player, String message) {
-        if (!enabled) return false;
-        if (player.hasPermission("allaychat.bypass.flood")) return false;
+    public Result checkMessage(Player player, String message) {
+        if (!enabled) return ChatFilter.ALLOWED;
+        if (player.hasPermission("allaychat.bypass.flood")) return ChatFilter.ALLOWED;
 
         if (message.length() > maxMessageLength || pattern.matcher(message).find()) {
             ChatUtils.sendMessage(player, blockedMessage);
-            return true;
+            return ChatFilter.DISALLOWED;
         }
-        
-        return false;
+
+        return ChatFilter.ALLOWED;
     }
 
 }

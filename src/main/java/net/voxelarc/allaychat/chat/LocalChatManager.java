@@ -40,6 +40,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 
 @RequiredArgsConstructor
 public class LocalChatManager implements ChatManager {
@@ -195,10 +196,10 @@ public class LocalChatManager implements ChatManager {
     }
 
     @Override
-    public boolean handleMessage(Player player, String message) {
+    public ChatFilter.Result handleMessage(Player player, String message) {
         for (ChatFilter filter : plugin.getFilters()) {
-            boolean cancel = filter.checkMessage(player, message);
-            if (cancel) {
+            ChatFilter.Result result = filter.checkMessage(player, message);
+            if (!result.allow()) {
                 Component component = ChatUtils.format(
                         plugin.getMessagesConfig().getString("messages.message-cancelled-operator"),
                         Placeholder.unparsed("player", player.getName()),
@@ -207,11 +208,13 @@ public class LocalChatManager implements ChatManager {
                                 .replace("Filter", "").toUpperCase())
                 );
                 plugin.getPlayerManager().broadcast(component, "allaychat.staff");
-                return true;
+                return result;
+            } else if (result.message() != null && !result.message().isEmpty()) {
+                return result;
             }
         }
 
-        return false;
+        return ChatFilter.ALLOWED;
     }
 
     @Override
@@ -227,7 +230,18 @@ public class LocalChatManager implements ChatManager {
         }
 
         String message = PlainTextComponentSerializer.plainText().serialize(event.message());
-        event.setCancelled(plugin.getChatManager().handleMessage(player, message));
+        ChatFilter.Result result = plugin.getChatManager().handleMessage(player, message);
+        plugin.getLogger().info("result: " + (result.message() != null) + " " + (!result.message().isEmpty()) + " " + (!result.message().equals(message)));
+        if (!result.allow()) {
+            plugin.getLogger().info("Event disallowed");
+            event.setCancelled(true);
+        } else if (result.message() != null && !result.message().isEmpty() && !result.message().equals(message)) {
+            plugin.getLogger().info("Message differs from the current one, changing it to: " + result.message());
+            plugin.getLogger().info("Current message: " + message);
+            Component component = event.message().replaceText(TextReplacementConfig.builder().matchLiteral(message).replacement(result.message()).build());
+            event.message(component);
+        }
+
         event.renderer(ChatRenderer.viewerUnaware(plugin.getChatManager().getChatRenderer()));
         event.viewers().removeIf(viewer -> {
             if (!(viewer instanceof Player target)) return false;
@@ -305,8 +319,7 @@ public class LocalChatManager implements ChatManager {
             return false;
         }
 
-        if (plugin.getPrivateMessageConfig().getBoolean("filter")
-                && handleMessage(from, message)) {
+        if (plugin.getPrivateMessageConfig().getBoolean("filter") && !handleMessage(from, message).allow()) {
             return false;
         }
 
@@ -402,7 +415,7 @@ public class LocalChatManager implements ChatManager {
         YamlConfig replacementConfig = plugin.getReplacementConfig();
         if (replacementConfig.getBoolean("mention.enabled")) {
             for (String playerName : plugin.getPlayerManager().getAllPlayers()) {
-                if (messageContent.contains(playerName)) {
+                if (messageContent.toLowerCase().contains(playerName.toLowerCase())) {
                     Player targetPlayer = Bukkit.getPlayerExact(playerName);
                     if (targetPlayer == null) continue; // Player is not online
                     ChatUser user = plugin.getUserManager().getUser(targetPlayer.getUniqueId());
@@ -441,7 +454,7 @@ public class LocalChatManager implements ChatManager {
 
                     // Replace all occurrences of the player's name with the mention format no matter the case
                     messageComponent = messageComponent.replaceText(TextReplacementConfig.builder()
-                            .matchLiteral(playerName)
+                            .match(Pattern.compile(playerName, Pattern.CASE_INSENSITIVE))
                             .replacement(ChatUtils.format(replacementConfig.getString("mention.text"), Placeholder.unparsed("player", playerName)))
                             .build()
                     );

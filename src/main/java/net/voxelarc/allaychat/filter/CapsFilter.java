@@ -15,6 +15,7 @@ public class CapsFilter implements ChatFilter {
     private int maxCaps = 3;
     private boolean enabled = true;
     private boolean bypassUsernames = false;
+    private boolean lowerCase = false;
 
     private Component blockedMessage;
 
@@ -22,14 +23,15 @@ public class CapsFilter implements ChatFilter {
     public void onEnable() {
         enabled = plugin.getFilterConfig().getBoolean("caps.enabled", true);
         bypassUsernames = plugin.getFilterConfig().getBoolean("caps.bypass-usernames", false);
+        lowerCase = plugin.getFilterConfig().getBoolean("caps.lower-case", false);
         maxCaps = plugin.getFilterConfig().getInt("caps.max-caps", 3);
         blockedMessage = ChatUtils.format(plugin.getFilterConfig().getString("caps.message"));
     }
 
     @Override
-    public boolean checkMessage(Player player, String message) {
-        if (!enabled) return false;
-        if (player.hasPermission("allaychat.bypass.caps")) return false;
+    public Result checkMessage(Player player, String message) {
+        if (!enabled) return ChatFilter.ALLOWED;
+        if (player.hasPermission("allaychat.bypass.caps")) return ChatFilter.ALLOWED;
 
         if (bypassUsernames) {
             String[] split = message.split(" ");
@@ -39,20 +41,24 @@ public class CapsFilter implements ChatFilter {
                 totalPlayerNameCaps += capsCount(msg);
             }
 
-            if (capsCount(message) - totalPlayerNameCaps >= maxCaps) {
+            if (capsCount(message) - totalPlayerNameCaps >= maxCaps && !lowerCase) {
                 ChatUtils.sendMessage(player, blockedMessage);
-                return true;
+                return ChatFilter.DISALLOWED;
+            } else if (lowerCase) {
+                return new Result(true, message.toLowerCase());
             }
 
-            return false;
+            return ChatFilter.ALLOWED;
         }
 
-        if (capsCount(message) >= maxCaps) {
+        if (capsCount(message) >= maxCaps && !lowerCase) {
             ChatUtils.sendMessage(player, blockedMessage);
-            return true;
+            return ChatFilter.DISALLOWED;
+        } else if (lowerCase) {
+            return new Result(true, message.toLowerCase());
         }
 
-        return false;
+        return ChatFilter.ALLOWED;
     }
 
     public static int capsCount(String text) {

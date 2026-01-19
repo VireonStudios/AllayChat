@@ -34,18 +34,18 @@ public class CooldownFilter implements ChatFilter {
     }
 
     @Override
-    public boolean checkMessage(Player player, String message) {
-        if (!enabled) return false;
-        if (player.hasPermission("allaychat.bypass.cooldown")) return false;
+    public Result checkMessage(Player player, String message) {
+        if (!enabled) return ChatFilter.ALLOWED;
+        if (player.hasPermission("allaychat.bypass.cooldown")) return ChatFilter.ALLOWED;
 
         if (cooldownCache.getIfPresent(player.getUniqueId()) != null) {
             ChatUtils.sendMessage(player, blockedMessage);
-            return true;
+            return ChatFilter.DISALLOWED;
         } else {
             cooldownCache.put(player.getUniqueId(), (byte) 0);
         }
         
-        return false;
+        return ChatFilter.ALLOWED;
     }
 
 }

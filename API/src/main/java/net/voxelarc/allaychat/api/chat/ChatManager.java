@@ -3,6 +3,7 @@ package net.voxelarc.allaychat.api.chat;
 import io.papermc.paper.chat.ChatRenderer;
 import io.papermc.paper.event.player.AsyncChatEvent;
 import net.kyori.adventure.text.Component;
+import net.voxelarc.allaychat.api.filter.ChatFilter;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 
@@ -27,7 +28,7 @@ public interface ChatManager {
      *
      * @return true if the event should be cancelled, false otherwise.
      */
-    boolean handleMessage(Player player, String message);
+    ChatFilter.Result handleMessage(Player player, String message);
 
     void handleChatEvent(AsyncChatEvent event);
 

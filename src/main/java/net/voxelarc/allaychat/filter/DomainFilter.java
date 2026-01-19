@@ -27,16 +27,16 @@ public class DomainFilter implements ChatFilter {
     }
 
     @Override
-    public boolean checkMessage(Player player, String message) {
-        if (!enabled) return false;
-        if (player.hasPermission("allaychat.bypass.domain")) return false;
+    public Result checkMessage(Player player, String message) {
+        if (!enabled) return ChatFilter.ALLOWED;
+        if (player.hasPermission("allaychat.bypass.domain")) return ChatFilter.ALLOWED;
 
         if (pattern.matcher(message).find()) {
             ChatUtils.sendMessage(player, blockedMessage);
-            return true;
+            return ChatFilter.DISALLOWED;
         }
 
-        return false;
+        return ChatFilter.ALLOWED;
     }
 
 }

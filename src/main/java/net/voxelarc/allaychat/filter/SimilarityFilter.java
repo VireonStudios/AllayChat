@@ -34,14 +34,14 @@ public class SimilarityFilter implements ChatFilter {
     }
 
     @Override
-    public boolean checkMessage(Player player, String message) {
-        if (!enabled) return false;
-        if (player.hasPermission("allaychat.bypass.similarity")) return false;
+    public Result checkMessage(Player player, String message) {
+        if (!enabled) return ChatFilter.ALLOWED;
+        if (player.hasPermission("allaychat.bypass.similarity")) return ChatFilter.ALLOWED;
 
         List<Message> messages = lastMessages.getOrDefault(player.getUniqueId(), new ArrayList<>());
         if (messages.stream().anyMatch(msg -> isSimilar(msg, message))) {
             ChatUtils.sendMessage(player, blockMessage);
-            return true;
+            return ChatFilter.ALLOWED;
         }
 
         messages.add(new Message(message, System.currentTimeMillis()));
@@ -51,7 +51,7 @@ public class SimilarityFilter implements ChatFilter {
             messages.removeFirst();
         }
 
-        return false;
+        return ChatFilter.ALLOWED;
     }
 
     private boolean isSimilar(Message message, String text) {
