@@ -2,7 +2,7 @@ name: AllayChat
 version: '${version}'
 main: net.voxelarc.allaychat.AllayChatPlugin
 loader: net.voxelarc.allaychat.AllayChatLoader
-api-version: '1.21'
+api-version: '26.1'
 folia-supported: true
 
 authors:
