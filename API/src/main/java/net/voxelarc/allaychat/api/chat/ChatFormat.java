@@ -10,7 +10,7 @@ public record ChatFormat(String group, String format, Hover hover, Click click) 
 
     }
 
-    public record Click(ClickEvent.Action action, String command) {
+    public record Click(String command) {
 
     }
 

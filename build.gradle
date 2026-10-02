@@ -1,6 +1,6 @@
 plugins {
     id 'java'
-    id 'com.gradleup.shadow' version '9.0.0-beta13'
+    id 'com.gradleup.shadow' version '9.6.1'
 }
 
 group = 'net.voxelarc'
@@ -36,7 +36,7 @@ allprojects {
         compileOnly('org.projectlombok:lombok:1.18.42')
         annotationProcessor 'org.projectlombok:lombok:1.18.42'
 
-        compileOnly 'io.papermc.paper:paper-api:1.21.11-R0.1-SNAPSHOT'
+        compileOnly 'io.papermc.paper:paper-api:26.2.build.+'
         compileOnly 'me.clip:placeholderapi:2.11.7'
     }
 
@@ -62,7 +62,7 @@ dependencies {
     implementation ("dev.triumphteam:triumph-cmd-bukkit:2.0.0-SNAPSHOT") { exclude group: "com.google.code.gson" }
 }
 
-def targetJavaVersion = 21
+def targetJavaVersion = 25
 java {
     def javaVersion = JavaVersion.toVersion(targetJavaVersion)
     sourceCompatibility = javaVersion
